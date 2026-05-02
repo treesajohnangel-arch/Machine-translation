@@ -49,12 +49,14 @@ EXAMPLE_SENTENCES = [
  
 def download_from_gdrive(file_id: str, dest_path: str):
     """Download a file from Google Drive using gdown."""
+    import subprocess
+    import sys
     try:
         import gdown
     except ImportError:
-        os.system("pip install -q gdown")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "gdown"])
         import gdown
- 
+
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, dest_path, quiet=False)
  
