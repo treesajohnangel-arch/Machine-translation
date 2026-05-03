@@ -1,10 +1,12 @@
 """
 app.py — Streamlit UI for Manglish → English translation.
-Loads the fine-tuned T5 model from the local ./manglish_t5_model folder.
+Downloads the fine-tuned T5 model from Google Drive on first run.
 """
 
+import os
 import time
 import torch
+import gdown
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
@@ -20,10 +22,11 @@ st.set_page_config(
 # ──────────────────────────────────────────────
 # Constants
 # ──────────────────────────────────────────────
-MODEL_PATH = "./manglish_t5_model"
-PREFIX     = "translate manglish to english: "
-MAX_LENGTH = 128
-DEVICE     = "cuda" if torch.cuda.is_available() else "cpu"
+MODEL_PATH    = "./manglish_t5_model"
+GDRIVE_FOLDER = "1N4045lmwqHBFjjUoUqQRZdoyFlePMC00"
+PREFIX        = "translate manglish to english: "
+MAX_LENGTH    = 128
+DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
 
 EXAMPLES = [
     "njan nale varaam",
@@ -41,6 +44,16 @@ EXAMPLES = [
 # ──────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
 def load_model():
+    # Download from Google Drive only if not already present
+    if not os.path.exists(MODEL_PATH):
+        st.info("⬇️ Downloading model files from Google Drive (first run only)...")
+        gdown.download_folder(
+            id=GDRIVE_FOLDER,
+            output=MODEL_PATH,
+            quiet=False,
+            use_cookies=False,
+        )
+
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
     model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH)
     model.eval()
@@ -141,14 +154,14 @@ with st.sidebar:
 # ──────────────────────────────────────────────
 # Load model
 # ──────────────────────────────────────────────
-with st.spinner("Loading model …"):
+with st.spinner("Loading model … (first launch may take ~1 min to download)"):
     try:
         tokenizer, model_obj = load_model()
         model_ready = True
-        st.success(f"✅  Model loaded — running on **{DEVICE.upper()}**", icon="🤖")
+        st.success(f"✅ Model loaded — running on **{DEVICE.upper()}**", icon="🤖")
     except Exception as e:
         model_ready = False
-        st.error(f"❌ Could not load model from `{MODEL_PATH}`:\n\n```\n{e}\n```")
+        st.error(f"❌ Could not load model:\n\n```\n{e}\n```")
 
 # ──────────────────────────────────────────────
 # Input area
