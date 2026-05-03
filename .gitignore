@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Trained model checkpoints (large files — store on HF Hub instead)
+manglish_t5_model/
+checkpoint-*/
+
+# Streamlit secrets (NEVER commit these)
+.streamlit/secrets.toml
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# MacOS
+.DS_Store
+
+# Logs
+*.log
+runs/
+logs/
+
+# Dataset (optional — keep if small enough for GitHub)
+# manglish_dataset_final.json
