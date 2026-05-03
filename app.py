@@ -44,15 +44,17 @@ EXAMPLES = [
 # ──────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
 def load_model():
-    # Check for the actual model file, not just the folder
-    if not os.path.exists(os.path.join(MODEL_PATH, "model.safetensors")):
-        st.info("⬇️ Downloading model from Google Drive...")
+    # Check for model.safetensors specifically (not just the folder)
+    model_file = os.path.join(MODEL_PATH, "model.safetensors")
+    if not os.path.exists(model_file):
+        st.info("⬇️ Downloading model from Google Drive (first run only, ~1 min)...")
         gdown.download_folder(
             id=GDRIVE_FOLDER,
             output=MODEL_PATH,
             quiet=False,
             use_cookies=False,
         )
+
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
     model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH)
     model.eval()
@@ -153,7 +155,7 @@ with st.sidebar:
 # ──────────────────────────────────────────────
 # Load model
 # ──────────────────────────────────────────────
-with st.spinner("Loading model … (first launch may take ~1 min to download)"):
+with st.spinner("Loading model … (first launch downloads ~240MB from Google Drive)"):
     try:
         tokenizer, model_obj = load_model()
         model_ready = True
