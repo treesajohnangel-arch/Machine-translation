@@ -73,8 +73,18 @@ def prepare_model():
 @st.cache_resource(show_spinner=False)
 def load_model():
     device    = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    # Tokenizer and config are in outputs/
     tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH, local_files_only=True)
-    model     = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH, local_files_only=True)
+    
+    # Load model architecture from config, then load weights manually
+    model = AutoModelForSeq2SeqLM.from_pretrained(TOKENIZER_PATH, local_files_only=True)
+    
+    # Load the raw weights file
+    weights_path = str(BASE_DIR / "outputs" / "best-model")
+    state_dict = torch.load(weights_path, map_location=device)
+    model.load_state_dict(state_dict, strict=False)
+    
     model.config.tie_word_embeddings = False
     model.to(device)
     model.eval()
@@ -125,16 +135,6 @@ def main():
  
     prepare_model()
 
-    # TEMPORARY DEBUG
-    import os
-    best_model_dir = BASE_DIR / "outputs" / "best-model"
-    if best_model_dir.exists():
-        st.write("best-model/ contents:", os.listdir(str(best_model_dir)))
-        for item in os.listdir(str(best_model_dir)):
-            subpath = best_model_dir / item
-            if subpath.is_dir():
-                st.write(f"  {item}/ contents:", os.listdir(str(subpath)))
-    st.stop()
  
     with st.spinner("Loading model..."):
         tokenizer, model, device = load_model()
