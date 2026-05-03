@@ -1,10 +1,5 @@
 """
 app.py  —  Manglish → English Translator (Streamlit App)
-=========================================================
-Model is downloaded automatically from Google Drive on first run.
- 
-Run:
-    streamlit run app.py
 """
  
 import os
@@ -20,9 +15,9 @@ from pathlib import Path
  
 GDRIVE_FILE_ID = "1rgGvHB1Z4WM1lxeFKtu4bXXaXZYF5q_k"
 
-# Use absolute path so Streamlit Cloud never confuses it with a HuggingFace repo ID
 BASE_DIR   = Path(__file__).parent
-MODEL_PATH = str(BASE_DIR / "outputs")
+MODEL_PATH = str(BASE_DIR / "outputs" / "best-model")  # hyphen, not underscore
+
 MAX_INPUT_LENGTH   = 128
 MAX_TARGET_LENGTH  = 128
 INSTRUCTION_PREFIX = 'Translate the following Manglish text to English: '
@@ -43,53 +38,40 @@ EXAMPLE_SENTENCES = [
 # ═══════════════════════════════════════════════════════════════════════════════
  
 def download_from_gdrive(file_id: str, dest_path: str):
-    """Download a file from Google Drive using gdown."""
-    import subprocess
-    import sys
+    import subprocess, sys
     try:
         import gdown
     except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "gdown"])
         import gdown
-
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, dest_path, quiet=False)
  
  
 def prepare_model():
-    """Download and unzip model from Google Drive if not already present."""
     if Path(MODEL_PATH).exists():
-        return   # already downloaded, skip
+        return
  
     st.info("Downloading model from Google Drive (first run only, ~500MB)...")
-    
-    # Use absolute path for the zip file
     zip_path = str(BASE_DIR / "best_model.zip")
- 
-    # Download
     download_from_gdrive(GDRIVE_FILE_ID, zip_path)
  
-    # Unzip into the repo root (BASE_DIR), so outputs/best_model lands correctly
     st.info("Extracting model files...")
-    os.makedirs(BASE_DIR / "outputs", exist_ok=True)
     with zipfile.ZipFile(zip_path, "r") as z:
         z.extractall(str(BASE_DIR))
  
-    # Clean up zip
     if os.path.exists(zip_path):
         os.remove(zip_path)
     st.success("Model ready!")
  
  
 # ═══════════════════════════════════════════════════════════════════════════════
-#  MODEL LOADING  (cached so it only loads once per session)
+#  MODEL LOADING
 # ═══════════════════════════════════════════════════════════════════════════════
  
 @st.cache_resource(show_spinner=False)
 def load_model():
     device    = "cuda" if torch.cuda.is_available() else "cpu"
-    # local_files_only=True prevents transformers from treating the path
-    # as a HuggingFace Hub repo ID and making network requests
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
     model     = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH, local_files_only=True)
     model.config.tie_word_embeddings = False
@@ -136,26 +118,18 @@ def main():
     )
     st.divider()
  
-    # ── Download model if needed ──────────────────────────────────────────────
     if GDRIVE_FILE_ID == "PASTE_YOUR_FILE_ID_HERE":
-        st.error(
-            "Please open app.py and set your Google Drive file ID.\n\n"
-            "GDRIVE_FILE_ID = 'PASTE_YOUR_FILE_ID_HERE'  ← replace this"
-        )
+        st.error("Please set your Google Drive file ID in app.py")
         st.stop()
  
     prepare_model()
-
-    
  
-    # ── Load model ────────────────────────────────────────────────────────────
     with st.spinner("Loading model..."):
         tokenizer, model, device = load_model()
  
     st.success(f"✅ Model loaded | Running on: **{device.upper()}**")
     st.divider()
  
-    # ── Input ─────────────────────────────────────────────────────────────────
     st.subheader("✍️ Enter Manglish Text")
  
     selected_example = st.selectbox(
@@ -173,7 +147,6 @@ def main():
  
     translate_btn = st.button("🔁 Translate", type="primary", use_container_width=True)
  
-    # ── Output ────────────────────────────────────────────────────────────────
     if translate_btn:
         if not user_input.strip():
             st.warning("Please enter a Manglish sentence first.")
@@ -193,7 +166,6 @@ def main():
  
     st.divider()
  
-    # ── Batch translation ─────────────────────────────────────────────────────
     with st.expander("📋 Batch Translate (multiple sentences)"):
         st.markdown("Enter one Manglish sentence per line:")
         batch_input = st.text_area(
