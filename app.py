@@ -69,48 +69,33 @@ def prepare_model():
 # ═══════════════════════════════════════════════════════════════════════════════
 #  MODEL LOADING
 # ═══════════════════════════════════════════════════════════════════════════════
- 
-@st.cache_resource(show_spinner=False)
+ @st.cache_resource(show_spinner=False)
 def load_model():
     from transformers import AutoConfig
+    from safetensors.torch import load_file
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
-    # Load tokenizer from outputs/
+    # Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH, local_files_only=True)
     
-    # Build model architecture from config (no weights needed)
+    # Build model from config
     config = AutoConfig.from_pretrained(TOKENIZER_PATH, local_files_only=True)
     model = AutoModelForSeq2SeqLM.from_config(config)
     
-    # Load the raw weights file into the model
     weights_path = str(BASE_DIR / "outputs" / "best-model")
-    state_dict = torch.load(weights_path, map_location=device, weights_only=False)
-    model.load_state_dict(state_dict, strict=False)
     
+    # Try safetensors first, fall back to torch.load
+    try:
+        state_dict = load_file(weights_path, device=device)
+    except Exception:
+        state_dict = torch.load(weights_path, map_location=device, weights_only=False)
+    
+    model.load_state_dict(state_dict, strict=False)
     model.config.tie_word_embeddings = False
     model.to(device)
     model.eval()
     return tokenizer, model, device
- 
-def translate(text: str, tokenizer, model, device: str) -> str:
-    prompt = f'{INSTRUCTION_PREFIX}"{text}"'
-    inputs = tokenizer(
-        prompt,
-        return_tensors = "pt",
-        max_length     = MAX_INPUT_LENGTH,
-        truncation     = True,
-    ).to(device)
- 
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_length           = MAX_TARGET_LENGTH,
-            num_beams            = 4,
-            early_stopping       = True,
-            no_repeat_ngram_size = 3,
-        )
-    return tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
  
  
 # ═══════════════════════════════════════════════════════════════════════════════
