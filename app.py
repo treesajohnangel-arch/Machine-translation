@@ -76,7 +76,7 @@ def prepare_model():
     st.info("Extracting model files...")
     os.makedirs("outputs", exist_ok=True)
     with zipfile.ZipFile(zip_path, "r") as z:
-        z.extractall("outputs")
+        z.extractall(".")
  
     # Clean up zip
     os.remove(zip_path)
