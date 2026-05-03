@@ -85,7 +85,7 @@ def load_model():
     
     # Load the raw weights file into the model
     weights_path = str(BASE_DIR / "outputs" / "best-model")
-    state_dict = torch.load(weights_path, map_location=device, weights_only=True)
+    state_dict = torch.load(weights_path, map_location=device, weights_only=False)
     model.load_state_dict(state_dict, strict=False)
     
     model.config.tie_word_embeddings = False
