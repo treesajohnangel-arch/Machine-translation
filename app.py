@@ -15,21 +15,17 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from pathlib import Path
  
 # ═══════════════════════════════════════════════════════════════════════════════
-#  CONFIG  — paste your Google Drive file ID below
+#  CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
  
-# How to get FILE_ID:
-#   1. In Google Drive, right-click your best_model.zip → Share → Anyone with link
-#   2. The share link looks like:
-#      https://drive.google.com/file/d/1ABCxyz.../view?usp=sharing
-#                                       ^^^^^^^^^^^ this part is the FILE_ID
-#   3. Paste it below:
- 
-GDRIVE_FILE_ID    = "1rgGvHB1Z4WM1lxeFKtu4bXXaXZYF5q_k"
- 
-MODEL_PATH        = "outputs/best_model"
-MAX_INPUT_LENGTH  = 128
-MAX_TARGET_LENGTH = 128
+GDRIVE_FILE_ID = "1rgGvHB1Z4WM1lxeFKtu4bXXaXZYF5q_k"
+
+# Use absolute path so Streamlit Cloud never confuses it with a HuggingFace repo ID
+BASE_DIR   = Path(__file__).parent
+MODEL_PATH = str(BASE_DIR / "outputs" / "best_model")
+
+MAX_INPUT_LENGTH   = 128
+MAX_TARGET_LENGTH  = 128
 INSTRUCTION_PREFIX = 'Translate the following Manglish text to English: '
  
 EXAMPLE_SENTENCES = [
@@ -67,19 +63,22 @@ def prepare_model():
         return   # already downloaded, skip
  
     st.info("Downloading model from Google Drive (first run only, ~500MB)...")
-    zip_path = "best_model.zip"
+    
+    # Use absolute path for the zip file
+    zip_path = str(BASE_DIR / "best_model.zip")
  
     # Download
     download_from_gdrive(GDRIVE_FILE_ID, zip_path)
  
-    # Unzip
+    # Unzip into the repo root (BASE_DIR), so outputs/best_model lands correctly
     st.info("Extracting model files...")
-    os.makedirs("outputs", exist_ok=True)
+    os.makedirs(BASE_DIR / "outputs", exist_ok=True)
     with zipfile.ZipFile(zip_path, "r") as z:
-        z.extractall(".")
+        z.extractall(str(BASE_DIR))
  
     # Clean up zip
-    os.remove(zip_path)
+    if os.path.exists(zip_path):
+        os.remove(zip_path)
     st.success("Model ready!")
  
  
@@ -90,8 +89,10 @@ def prepare_model():
 @st.cache_resource(show_spinner=False)
 def load_model():
     device    = "cuda" if torch.cuda.is_available() else "cpu"
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, use_fast=False)
-    model     = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH)
+    # local_files_only=True prevents transformers from treating the path
+    # as a HuggingFace Hub repo ID and making network requests
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
+    model     = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH, local_files_only=True)
     model.config.tie_word_embeddings = False
     model.to(device)
     model.eval()
