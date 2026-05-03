@@ -22,8 +22,7 @@ GDRIVE_FILE_ID = "1rgGvHB1Z4WM1lxeFKtu4bXXaXZYF5q_k"
 
 # Use absolute path so Streamlit Cloud never confuses it with a HuggingFace repo ID
 BASE_DIR   = Path(__file__).parent
-MODEL_PATH = str(BASE_DIR / "outputs" / "best_model")
-
+MODEL_PATH = str(BASE_DIR / "outputs")
 MAX_INPUT_LENGTH   = 128
 MAX_TARGET_LENGTH  = 128
 INSTRUCTION_PREFIX = 'Translate the following Manglish text to English: '
@@ -147,14 +146,7 @@ def main():
  
     prepare_model()
 
-    # TEMPORARY DEBUG — remove after fixing
-    st.write("MODEL_PATH:", MODEL_PATH)
-    st.write("Model path exists:", Path(MODEL_PATH).exists())
-    st.write("Contents of BASE_DIR:", os.listdir(str(BASE_DIR)))
-    outputs_dir = BASE_DIR / "outputs"
-    if outputs_dir.exists():
-        st.write("Contents of outputs/:", os.listdir(str(outputs_dir)))
-    st.stop()
+    
  
     # ── Load model ────────────────────────────────────────────────────────────
     with st.spinner("Loading model..."):
