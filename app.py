@@ -72,24 +72,26 @@ def prepare_model():
  
 @st.cache_resource(show_spinner=False)
 def load_model():
-    device    = "cuda" if torch.cuda.is_available() else "cpu"
+    from transformers import AutoConfig
     
-    # Tokenizer and config are in outputs/
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    # Load tokenizer from outputs/
     tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH, local_files_only=True)
     
-    # Load model architecture from config, then load weights manually
-    model = AutoModelForSeq2SeqLM.from_pretrained(TOKENIZER_PATH, local_files_only=True)
+    # Build model architecture from config (no weights needed)
+    config = AutoConfig.from_pretrained(TOKENIZER_PATH, local_files_only=True)
+    model = AutoModelForSeq2SeqLM.from_config(config)
     
-    # Load the raw weights file
+    # Load the raw weights file into the model
     weights_path = str(BASE_DIR / "outputs" / "best-model")
-    state_dict = torch.load(weights_path, map_location=device)
+    state_dict = torch.load(weights_path, map_location=device, weights_only=True)
     model.load_state_dict(state_dict, strict=False)
     
     model.config.tie_word_embeddings = False
     model.to(device)
     model.eval()
     return tokenizer, model, device
- 
  
 def translate(text: str, tokenizer, model, device: str) -> str:
     prompt = f'{INSTRUCTION_PREFIX}"{text}"'
