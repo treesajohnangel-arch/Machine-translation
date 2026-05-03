@@ -70,7 +70,7 @@ def prepare_model():
 #  MODEL LOADING
 # ═══════════════════════════════════════════════════════════════════════════════
  @st.cache_resource(show_spinner=False)
-def load_model():
+ def load_model():
     from transformers import AutoConfig
     from safetensors.torch import load_file
     
