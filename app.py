@@ -16,7 +16,8 @@ from pathlib import Path
 GDRIVE_FILE_ID = "1rgGvHB1Z4WM1lxeFKtu4bXXaXZYF5q_k"
 
 BASE_DIR   = Path(__file__).parent
-MODEL_PATH = str(BASE_DIR / "outputs")  # hyphen, not underscore
+TOKENIZER_PATH  = str(BASE_DIR / "outputs")
+MODEL_PATH = str(BASE_DIR / "outputs"/ "best-model")  # hyphen, not underscore
 
 MAX_INPUT_LENGTH   = 128
 MAX_TARGET_LENGTH  = 128
@@ -72,7 +73,7 @@ def prepare_model():
 @st.cache_resource(show_spinner=False)
 def load_model():
     device    = "cuda" if torch.cuda.is_available() else "cpu"
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
+    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH, local_files_only=True)
     model     = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH, local_files_only=True)
     model.config.tie_word_embeddings = False
     model.to(device)
