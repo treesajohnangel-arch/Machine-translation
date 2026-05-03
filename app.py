@@ -16,7 +16,7 @@ from pathlib import Path
 GDRIVE_FILE_ID = "1rgGvHB1Z4WM1lxeFKtu4bXXaXZYF5q_k"
 
 BASE_DIR   = Path(__file__).parent
-MODEL_PATH = str(BASE_DIR / "outputs" / "best-model")  # hyphen, not underscore
+MODEL_PATH = str(BASE_DIR / "outputs")  # hyphen, not underscore
 
 MAX_INPUT_LENGTH   = 128
 MAX_TARGET_LENGTH  = 128
@@ -123,17 +123,6 @@ def main():
         st.stop()
  
     prepare_model()
-
-    import os
-    st.write("MODEL_PATH:", MODEL_PATH)
-    st.write("Path exists:", Path(MODEL_PATH).exists())
-    st.write("BASE_DIR contents:", os.listdir(str(BASE_DIR)))
-    if (BASE_DIR / "outputs").exists():
-         st.write("outputs/ contents:", os.listdir(str(BASE_DIR / "outputs")))
-         best = BASE_DIR / "outputs" / "best-model"
-         if best.exists():
-              st.write("best-model/ contents:", os.listdir(str(best)))
-    st.stop()
  
     with st.spinner("Loading model..."):
         tokenizer, model, device = load_model()
