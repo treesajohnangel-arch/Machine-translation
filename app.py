@@ -146,6 +146,15 @@ def main():
         st.stop()
  
     prepare_model()
+
+    # TEMPORARY DEBUG — remove after fixing
+    st.write("MODEL_PATH:", MODEL_PATH)
+    st.write("Model path exists:", Path(MODEL_PATH).exists())
+    st.write("Contents of BASE_DIR:", os.listdir(str(BASE_DIR)))
+    outputs_dir = BASE_DIR / "outputs"
+    if outputs_dir.exists():
+        st.write("Contents of outputs/:", os.listdir(str(outputs_dir)))
+    st.stop()
  
     # ── Load model ────────────────────────────────────────────────────────────
     with st.spinner("Loading model..."):
