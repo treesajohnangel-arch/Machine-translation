@@ -44,16 +44,15 @@ EXAMPLES = [
 # ──────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
 def load_model():
-    # Download from Google Drive only if not already present
-    if not os.path.exists(MODEL_PATH):
-        st.info("⬇️ Downloading model files from Google Drive (first run only)...")
+    # Check for the actual model file, not just the folder
+    if not os.path.exists(os.path.join(MODEL_PATH, "model.safetensors")):
+        st.info("⬇️ Downloading model from Google Drive...")
         gdown.download_folder(
             id=GDRIVE_FOLDER,
             output=MODEL_PATH,
             quiet=False,
             use_cookies=False,
         )
-
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
     model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH)
     model.eval()
