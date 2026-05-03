@@ -124,6 +124,17 @@ def main():
         st.stop()
  
     prepare_model()
+
+    # TEMPORARY DEBUG
+    import os
+    best_model_dir = BASE_DIR / "outputs" / "best-model"
+    if best_model_dir.exists():
+        st.write("best-model/ contents:", os.listdir(str(best_model_dir)))
+        for item in os.listdir(str(best_model_dir)):
+            subpath = best_model_dir / item
+            if subpath.is_dir():
+                st.write(f"  {item}/ contents:", os.listdir(str(subpath)))
+    st.stop()
  
     with st.spinner("Loading model..."):
         tokenizer, model, device = load_model()
